@@ -25,11 +25,20 @@ headers = {
 # 获取 GitHub Issue 数据
 issue_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues/{issue_number}'
 response = requests.get(issue_url, headers=headers)
+
+# 打印返回的响应内容
+print(response.status_code)
+print(response.json())  # 打印响应数据，查看是否包含 title 字段
+
+# 检查响应内容是否正确
 issue_data = response.json()
 
-# 获取 Issue 标题和链接
-issue_title = issue_data['title']
-issue_url = issue_data['html_url']
+if 'title' in issue_data:
+    issue_title = issue_data['title']
+    issue_url = issue_data['html_url']
+else:
+    print(f"Error: 'title' not found in issue data. Response: {issue_data}")
+    exit(1)
 
 # 建立数据库连接
 try:
