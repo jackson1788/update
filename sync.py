@@ -62,9 +62,7 @@ try:
         VALUES (%s, %s)
     """, (issue_title, issue_url))
     print(f"Inserting issue title: {issue_title}, URL: {issue_url}")
-    connection.commit()
-    print("Data inserted successfully.")
-
+    
     # 提交并关闭连接
     connection.commit()
     print("Issue data inserted into database successfully.")
