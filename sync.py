@@ -70,3 +70,8 @@ except Exception as e:
 finally:
     if connection:
         connection.close()
+# 打印数据库连接配置
+print(f"DB Host: {db_host}")
+print(f"DB Port: {db_port}")
+print(f"DB Name: {db_name}")
+print(f"DB User: {db_user}")
