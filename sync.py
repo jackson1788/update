@@ -9,7 +9,7 @@ if not github_token:
     raise ValueError("GitHub Token (GH_TOKEN) is not set or is empty.")
 
 # 创建带认证的 GitHub 仓库 URL
-repo_url = f"https://{github_token}@github.com/jackson1788/github-issue-sync.git"
+repo_url = f"https://{github_token}@github.com/jackson1788/update.git"
 
 # 克隆 GitHub 仓库
 subprocess.run(["git", "clone", repo_url], check=True)
