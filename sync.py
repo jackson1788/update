@@ -50,7 +50,7 @@ try:
         user=db_user,
         password=db_password
     )
-    print("Database connection established successfully.")
+    print(f"Successfully connected to database at {db_host}:{db_port}")
     
     # 切换到指定的 Schema
     cursor = connection.cursor()
@@ -61,6 +61,9 @@ try:
         INSERT INTO New_tableYvvR0COMWm ("What is it?", "github link")
         VALUES (%s, %s)
     """, (issue_title, issue_url))
+    print(f"Inserting issue title: {issue_title}, URL: {issue_url}")
+    connection.commit()
+    print("Data inserted successfully.")
 
     # 提交并关闭连接
     connection.commit()
