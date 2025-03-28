@@ -1,2 +1,2 @@
-git clone https://github.com/your_username/github-issue-sync.git
+git clone https://github.com/jackson1788/github-issue-sync.git
 cd github-issue-sync
