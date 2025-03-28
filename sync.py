@@ -54,7 +54,7 @@ except Exception as e:
     print(f"Error: Unable to connect to the database. {e}")
     connection = None  # 处理失败的连接
     
-    if connection:
+if connection:
     # 进行数据库操作
     cursor = connection.cursor()
     # 执行其他操作
