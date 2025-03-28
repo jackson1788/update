@@ -24,7 +24,7 @@ jobs:
         run: pip install psycopg2 requests python-dotenv
 
       - name: Run sync script
-        run: python sync_github_issues.py
+        run: python sync.py
         env:
           GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
