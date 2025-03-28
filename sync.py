@@ -58,7 +58,7 @@ try:
     
     # 假设你要将 GitHub Issue 数据同步到 New_tableYvvR0COMWm 表
     cursor.execute("""
-        INSERT INTO "New_tableYvvR0COMWm" ("What is it?", "github link")
+        INSERT INTO tablegithub ("What is it?", "github link")
         VALUES (%s, %s)
     """, (issue_title, issue_url))
     print(f"Inserting issue title: {issue_title}, URL: {issue_url}")
