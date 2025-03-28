@@ -12,9 +12,8 @@ db_schema = os.getenv('DB_SCHEMA')
 gh_token = os.getenv('GH_TOKEN')
 
 # GitHub API URL 和 Headers
-repo_owner = 'your-github-username'
-repo_name = 'your-repository-name'
-issue_number = 1  # 这里是你要同步的 Issue 编号
+repo_owner = 'jackson1788'  # 替换为你的 GitHub 用户名
+repo_name = 'update'  # 替换为你的仓库名称
 
 # GitHub API 请求头部
 headers = {
@@ -22,22 +21,23 @@ headers = {
     'Accept': 'application/vnd.github.v3+json',
 }
 
-# 获取 GitHub Issue 数据
-issue_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues/{issue_number}'
-response = requests.get(issue_url, headers=headers)
+# 获取所有 GitHub Issues 数据（按创建时间排序）
+issues_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues?state=open'
+response = requests.get(issues_url, headers=headers)
 
-# 打印返回的响应内容
-print(response.status_code)
-print(response.json())  # 打印响应数据，查看是否包含 title 字段
+# 打印响应状态码和返回的数据
+print("Response Status Code:", response.status_code)
+print("Response JSON:", response.json())
 
-# 检查响应内容是否正确
-issue_data = response.json()
+# 检查响应内容并获取最新的 Issue 数据
+issues_data = response.json()
 
-if 'title' in issue_data:
-    issue_title = issue_data['title']
-    issue_url = issue_data['html_url']
+if response.status_code == 200 and len(issues_data) > 0:
+    latest_issue = issues_data[0]  # 获取创建的第一个 Issue
+    issue_title = latest_issue['title']
+    issue_url = latest_issue['html_url']
 else:
-    print(f"Error: 'title' not found in issue data. Response: {issue_data}")
+    print(f"Error: Unable to retrieve issues. Response: {issues_data}")
     exit(1)
 
 # 建立数据库连接
