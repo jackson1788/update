@@ -50,9 +50,6 @@ try:
         password=db_password
     )
     print("Database connection established successfully.")
-except Exception as e:
-    print(f"Error: Unable to connect to the database. {e}")
-    connection = None  # 处理失败的连接
     
 if connection:
     # 进行数据库操作
