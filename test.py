@@ -6,7 +6,7 @@ conn = psycopg2.connect(
     port="31408",
     dbname="railway",
     user="read_only_role_bseCwbXP2oUV7xTsdKl",
-    password="********",
+    password="1oh-3GP1gfd0JVXhbxTfx",
     options="-c search_path=bseCwbXP2oUV7xTsdKl"
 )
 
