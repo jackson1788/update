@@ -41,6 +41,7 @@ else:
     exit(1)
 
 # 建立数据库连接
+connection = None
 try:
     connection = psycopg2.connect(
         host=db_host,
@@ -51,16 +52,10 @@ try:
     )
     print("Database connection established successfully.")
     
-if connection:
-    # 进行数据库操作
-    cursor = connection.cursor()
-    # 执行其他操作
-else:
-    print("Database connection was not established. Exiting.")
-
     # 切换到指定的 Schema
+    cursor = connection.cursor()
     cursor.execute(f"SET search_path TO {db_schema};")
-
+    
     # 假设你要将 GitHub Issue 数据同步到 New_tableYvvR0COMWm 表
     cursor.execute("""
         INSERT INTO New_tableYvvR0COMWm ("What is it?", "github link")
@@ -69,6 +64,7 @@ else:
 
     # 提交并关闭连接
     connection.commit()
+    print("Issue data inserted into database successfully.")
     cursor.close()
 
 except Exception as e:
@@ -76,6 +72,8 @@ except Exception as e:
 finally:
     if connection:
         connection.close()
+        print("Database connection closed.")
+
 # 打印数据库连接配置
 print(f"DB Host: {db_host}")
 print(f"DB Port: {db_port}")
