@@ -2,9 +2,9 @@ name: Sync Issues from Teable
 
 on:
   issues:
-    types: [opened, edited]  # 当创建或编辑 Issue（包括 Assignees）时触发同步
+    types: [opened, edited, assigned, unassigned]  # 包括创建、编辑和分配/解除分配时触发
   issue_comment:
-    types: [created, edited]  # 当新增评论或编辑评论时触发同步
+    types: [created, edited]  # 当评论创建或编辑时触发同步
 
 jobs:
   sync:
