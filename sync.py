@@ -91,7 +91,7 @@ for issue in issues:
                     "Comment": comment_text
                 }
             },
-            "fieldKeyType": "id",
+            "fieldKeyType": "name",
             "typecast": True
         }
 
