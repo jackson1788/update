@@ -20,38 +20,27 @@ REPO_NAME = "update"
 TEABLE_TOKEN = "teable_acc3TYd8sn8wEYyyTNa_8p3MrgouOEhI82GBPjirUGyF+xPvSWoJKmTHcNTmu7o="
 TABLE_ID = "tblsGQOJRAKhizNBYGN"
 
-# 1️⃣ 获取 GitHub Issues
-issues_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues?state=open"
-response = requests.get(issues_url, headers=headers_github)
-
-if response.status_code != 200:
-    print(f"❌ GitHub API 请求失败: {response.status_code}, {response.text}")
-    exit(1)
-
-issues = response.json()
-
-# 打印所有 issue 的 ID
-for issue in issues:
-    print(f"Issue Title: {issue['title']}, Issue ID: {issue['id']}")
-
-# 2️⃣ 查询 Teable，获取已存在的 Issue ID
-teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
-query_params = {
-    "fieldKeyType": "name",
-    "take": 100
-}
-
 headers_teable = {
     "Authorization": f"Bearer {TEABLE_TOKEN}",
     "Content-Type": "application/json"
 }
 
+# 1️⃣ 获取 GitHub Issues
+issues_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues?state=open"
+response = requests.get(issues_url, headers=headers_github)
+if response.status_code != 200:
+    print(f"❌ GitHub API 请求失败: {response.status_code}, {response.text}")
+    exit(1)
+issues = response.json()
+
+# 2️⃣ 查询 Teable，获取已存在的 Issue ID
+teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+query_params = {"fieldKeyType": "name", "take": 100}
 response_teable = requests.get(teable_query_url, headers=headers_teable, params=query_params)
 if response_teable.status_code != 200:
     print(f"❌ Teable API 查询失败: {response_teable.status_code}, {response_teable.text}")
     exit(1)
 
-# 处理 Teable 返回的数据
 existing_records = {}
 teable_data = response_teable.json()
 for record in teable_data.get("records", []):
@@ -64,19 +53,16 @@ new_records = []
 updated_records = []
 
 for issue in issues:
-    issue_id = str(issue["id"])  # GitHub Issue ID
+    issue_id = str(issue["id"])
     issue_url = issue["html_url"]
     assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])
     comments_url = issue["comments_url"]
 
-    # 获取最新评论
+    # 获取最新一条评论
     response_comments = requests.get(comments_url, headers=headers_github)
     if response_comments.status_code == 200:
         comments = response_comments.json()
-        if comments:
-            comment_text = comments[-1]["body"]  # 只取最新的一条评论
-        else:
-            comment_text = "无评论"
+        comment_text = comments[-1]["body"] if comments else "无评论"
     else:
         print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
         comment_text = "无评论"
@@ -95,7 +81,6 @@ for issue in issues:
     else:
         # 需要更新的记录
         record_id = existing_records[issue_id]
-        print(f"Updating record: {record_id} for Issue ID: {issue_id}")
         update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
         update_data = {
             "record": {
@@ -106,21 +91,18 @@ for issue in issues:
                     "Comment": comment_text
                 }
             },
-            "fieldKeyType": "id"
+            "fieldKeyType": "id",
+            "typecast": True
         }
-        # 打印详细日志
-        print("\n==== 更新请求 ====")
+
+        print(f"==== 更新请求 ====")
         print(f"URL: {update_url}")
-        print(f"请求头: {json.dumps(headers_teable, indent=2)}")
-        print(f"请求体: {json.dumps(update_data, indent=2)}")
-        print("=================\n")
+        print(f"请求体: {json.dumps(update_data, indent=2, ensure_ascii=False)}")
 
         update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
-
-        # 打印响应
         print(f"响应状态码: {update_response.status_code}")
         print(f"响应内容: {update_response.text}")
-
+        
         if update_response.status_code == 200:
             print(f"✅ Issue {issue_url} 更新成功")
             updated_records.append(issue_url)
@@ -131,16 +113,10 @@ for issue in issues:
 if new_records:
     teable_insert_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
     data = {"records": new_records}
-
-    # 打印插入请求日志
-    print("==== 插入请求 ====")
-    print(f"URL: {teable_insert_url}")
-    print(f"请求头: {json.dumps(headers_teable, indent=2)}")
-    print(f"请求体: {json.dumps(data, indent=2)}")
-    print("=================")
-    
     response_insert = requests.post(teable_insert_url, headers=headers_teable, json=data)
-    
+    print(f"==== 插入请求 ====")
+    print(f"URL: {teable_insert_url}")
+    print(f"请求体: {json.dumps(data, indent=2, ensure_ascii=False)}")
     print(f"响应状态码: {response_insert.status_code}")
     print(f"响应内容: {response_insert.text}")
     
@@ -149,11 +125,5 @@ if new_records:
     else:
         print(f"❌ Teable API 插入失败: {response_insert.status_code}, {response_insert.text}")
 
-# 输出同步结果
 if not new_records and not updated_records:
     print("⚠️ 没有新 Issue 需要同步，所有数据已存在。")
-else:
-    if new_records:
-        print(f"✅ {len(new_records)} 条新记录已同步到 Teable。")
-    if updated_records:
-        print(f"✅ {len(updated_records)} 条记录已更新。")
