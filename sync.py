@@ -107,7 +107,7 @@ for issue in issues:
                     "Commenter": commenter
                 }
             },
-            "fieldKeyType": "id",
+            "fieldKeyType": "name",
             "typecast": True
         }
 
