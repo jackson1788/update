@@ -1,82 +1,51 @@
-import os
-import psycopg2
 import requests
+import os
+import json
 
-# 获取环境变量
-db_host = os.getenv('DB_HOST')
-db_port = os.getenv('DB_PORT')
-db_name = os.getenv('DB_NAME')
-db_user = os.getenv('DB_USER')
-db_password = os.getenv('DB_PASSWORD')
-db_schema = os.getenv('DB_SCHEMA')
-gh_token = os.getenv('GH_TOKEN')
+# 配置 GitHub 访问信息
+GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
+REPO_OWNER = "jackson1788"  # GitHub 用户名
+REPO_NAME = "update"  # 仓库名称
 
-# GitHub API URL 和 Headers
-repo_owner = 'jackson1788'  # 替换为你的 GitHub 用户名
-repo_name = 'update'  # 替换为你的仓库名称
+# 配置 Teable 访问信息
+TEABLE_TOKEN = "teable_acc3TYd8sn8wEYyyTNa_8p3MrgouOEhI82GBPjirUGyF+xPvSWoJKmTHcNTmu7o="  # Teable 访问令牌
+TABLE_ID = "tblsGQOJRAKhizNBYGN"  # 替换为你的 Teable 表 ID
 
-# GitHub API 请求头部
-headers = {
-    'Authorization': f'token {gh_token}',
-    'Accept': 'application/vnd.github.v3+json',
+# 1️⃣ 获取 GitHub Issues
+issues_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues?state=open"
+headers_github = {
+    "Authorization": f"token {GH_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
 }
+response = requests.get(issues_url, headers=headers_github)
 
-# 获取所有 GitHub Issues 数据（按创建时间排序）
-issues_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues?state=open'
-response = requests.get(issues_url, headers=headers)
-
-# 打印响应状态码和返回的数据
-print("Response Status Code:", response.status_code)
-print("Response JSON:", response.json())
-
-# 检查响应内容并获取最新的 Issue 数据
-issues_data = response.json()
-
-if response.status_code == 200 and len(issues_data) > 0:
-    latest_issue = issues_data[0]  # 获取创建的第一个 Issue
-    issue_title = latest_issue['title']
-    issue_url = latest_issue['html_url']
-else:
-    print(f"Error: Unable to retrieve issues. Response: {issues_data}")
+if response.status_code != 200:
+    print(f"GitHub API 请求失败: {response.status_code}, {response.text}")
     exit(1)
 
-# 建立数据库连接
-connection = None
-try:
-    connection = psycopg2.connect(
-        host=db_host,
-        port=db_port,
-        dbname=db_name,
-        user=db_user,
-        password=db_password
-    )
-    print(f"Successfully connected to database at {db_host}:{db_port}")
-    
-    # 切换到指定的 Schema
-    cursor = connection.cursor()
-    cursor.execute(f"SET search_path TO {db_schema};")
-    
-    # 假设你要将 GitHub Issue 数据同步到 New_tableYvvR0COMWm 表
-    cursor.execute("""
-        INSERT INTO tablegithub ("What is it?", "github link")
-        VALUES (%s, %s)
-    """, (issue_title, issue_url))
-    print(f"Inserting issue title: {issue_title}, URL: {issue_url}")
-    
-    # 提交并关闭连接
-    connection.commit()
-    print("Issue data inserted into database successfully.")
-    cursor.close()
+issues = response.json()
 
-except Exception as e:
-    print(f"Error: {e}")
-finally:
-    if connection:
-        connection.close()
-        print("Database connection closed.")
+# 2️⃣ 构造 Teable API 需要的记录格式
+records = []
+for issue in issues:
+    records.append({
+        "fields": {
+            "What is it?": issue["title"],  # 标题
+            "github link": issue["html_url"]  # GitHub Issue 链接
+        }
+    })
 
-# 打印数据库连接配置
-print(f"DB Host: {db_host}")
-print(f"DB Port: {db_port}")
-print(f"DB Name: {db_name}")
-print(f"DB User: {db_user}")
+# 3️⃣ 调用 Teable API 创建记录
+teable_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+headers_teable = {
+    "Authorization": f"Bearer {TEABLE_TOKEN}",
+    "Content-Type": "application/json"
+}
+data = {"records": records}
+
+response_teable = requests.post(teable_url, headers=headers_teable, json=data)
+
+if response_teable.status_code == 201:
+    print("✅ Issues 成功同步到 Teable")
+else:
+    print(f"❌ Teable API 请求失败: {response_teable.status_code}, {response_teable.text}")
