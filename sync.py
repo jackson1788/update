@@ -106,8 +106,19 @@ for issue in issues:
             },
             "fieldKeyType": "id"
         }
+        # 打印详细日志
+        print("\n==== 更新请求 ====")
+        print(f"URL: {update_url}")
+        print(f"请求头: {json.dumps(headers_teable, indent=2)}")
+        print(f"请求体: {json.dumps(update_data, indent=2)}")
+        print("=================\n")
 
         update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+
+        # 打印响应
+        print(f"响应状态码: {update_response.status_code}")
+        print(f"响应内容: {update_response.text}")
+
         if update_response.status_code == 200:
             print(f"✅ Issue {issue_url} 更新成功")
             updated_records.append(issue_url)
