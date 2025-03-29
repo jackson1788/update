@@ -30,6 +30,10 @@ if response.status_code != 200:
 
 issues = response.json()
 
+# 打印所有 issue 的 ID
+for issue in issues:
+    print(f"Issue Title: {issue['title']}, Issue ID: {issue['id']}")
+    
 # 2️⃣ 查询 Teable，获取已存在的 Issue ID
 teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 query_params = {
