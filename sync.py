@@ -26,12 +26,16 @@ if response.status_code != 200:
 issues = response.json()
 
 # 2️⃣ **查询 Teable，获取已存在的 github link**
-teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record?projection=github link"
+teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+query_params = {
+    "projection": ["github link"]  # ✅ 修正：使用数组
+}
 headers_teable = {
     "Authorization": f"Bearer {TEABLE_TOKEN}",
     "Content-Type": "application/json"
 }
-response_teable = requests.get(teable_query_url, headers=headers_teable)
+
+response_teable = requests.get(teable_query_url, headers=headers_teable, json=query_params)  # ✅ 传递 JSON 参数
 
 if response_teable.status_code != 200:
     print(f"❌ Teable API 查询失败: {response_teable.status_code}, {response_teable.text}")
