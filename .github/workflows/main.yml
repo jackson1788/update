@@ -1,14 +1,10 @@
 name: Sync Issues from Teable
 
 on:
-  push:
-    branches:
-      - main  # 只有当主分支发生推送时触发
-  schedule:
-    - cron: "*/30 * * * *"  # 每 30 分钟触发一次
-  workflow_dispatch:  # 允许手动触发工作流
   issues:
-    types: [opened, edited]  # 当创建或编辑 Issue 时触发同步
+    types: [opened, edited]  # 当创建或编辑 Issue（包括 Assignees）时触发同步
+  issue_comment:
+    types: [created, edited]  # 当新增评论或编辑评论时触发同步
 
 jobs:
   sync:
@@ -29,14 +25,12 @@ jobs:
       - name: Install dependencies
         run: pip install psycopg2 requests python-dotenv
 
-      # Step 4: Run the sync script
+      # Step 4: Load environment variables from .env
+      - name: Load environment variables
+        run: cat .env >> $GITHUB_ENV
+
+      # Step 5: Run sync script
       - name: Run sync script
         run: python sync.py
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # 传递 GitHub Token
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
+          GH_TOKEN: ${{ env.GH_TOKEN }}
