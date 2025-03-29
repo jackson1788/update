@@ -97,7 +97,6 @@ for issue in issues:
         update_data = {
             "record": {
                 "fields": {
-                    "Issue ID": issue_id,  # 关键字段
                     "What is it?": issue["title"],
                     "github link": issue_url,
                     "Assignees": assignees,
