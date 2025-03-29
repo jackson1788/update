@@ -3,7 +3,7 @@ import os
 import json
 
 # 配置 GitHub 访问信息
-GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
+# GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
 REPO_OWNER = "jackson1788"  # GitHub 用户名
 REPO_NAME = "update"  # 仓库名称
 
