@@ -106,7 +106,7 @@ for issue in issues:
             "fieldKeyType": "id"
         }
 
-        update_response = requests.put(update_url, headers=headers_teable, json=update_data)
+        update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
         if update_response.status_code == 200:
             print(f"✅ Issue {issue_url} 更新成功")
             updated_records.append(issue_url)
