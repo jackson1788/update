@@ -1,15 +1,6 @@
 import requests
 import os
 import json
-from dotenv import load_dotenv
-
-# 加载 .env 文件
-load_dotenv()
-GH_TOKEN = os.getenv('GH_TOKEN')
-
-if not GH_TOKEN:
-    print("❌ GH_TOKEN 为空，请检查环境变量")
-    exit(1)
 
 # 配置 GitHub 访问信息
 GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
