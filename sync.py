@@ -1,6 +1,15 @@
 import requests
 import os
 import json
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
+GH_TOKEN = os.getenv('GH_TOKEN')
+
+if not GH_TOKEN:
+    print("❌ GH_TOKEN 为空，请检查环境变量")
+    exit(1)
 
 # 配置 GitHub 访问信息
 GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
@@ -28,35 +37,82 @@ issues = response.json()
 # 2️⃣ **查询 Teable，获取已存在的 github link**
 teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 query_params = {
-    "projection": ["github link"]  # ✅ 修正：使用数组
+    "fieldKeyType": "name",
+    "take": 100
 }
+
 headers_teable = {
     "Authorization": f"Bearer {TEABLE_TOKEN}",
     "Content-Type": "application/json"
 }
 
-response_teable = requests.get(teable_query_url, headers=headers_teable, json=query_params)  # ✅ 传递 JSON 参数
+# 打印 query_params 查看 projection 是否正确
+print(f"Query Params: {query_params}")
+
+response_teable = requests.get(teable_query_url, headers=headers_teable, params=query_params)
 
 if response_teable.status_code != 200:
     print(f"❌ Teable API 查询失败: {response_teable.status_code}, {response_teable.text}")
     exit(1)
 
 # 获取 Teable 已存在的 Issue 链接
-existing_links = set()
+existing_links = {}
 teable_data = response_teable.json()
 for record in teable_data.get("records", []):
-    existing_links.add(record["fields"].get("github link"))
+    existing_links[record["fields"].get("github link")] = record["id"]
 
 # 3️⃣ **去重，筛选出 Teable 中没有的 Issues**
 new_records = []
+updated_records = []
 for issue in issues:
-    if issue["html_url"] not in existing_links:  # 只添加 Teable 没有的 Issue
+    issue_url = issue["html_url"]
+    issue_id = issue["id"]  # 使用 GitHub issue 的 ID 作为唯一标识符
+    
+    assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])  # 获取所有 Assignees
+    comments_url = issue["comments_url"]
+    
+    # 获取 issue 的最新评论
+    response_comments = requests.get(comments_url, headers=headers_github)
+    if response_comments.status_code == 200:
+        comments = response_comments.json()
+        comment_text = " ".join([comment["body"] for comment in comments])  # 合并评论
+    else:
+        print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
+        comment_text = "无评论"
+    
+    if issue_url not in existing_links:
+        # 新的 issue 需要添加到 Teable
         new_records.append({
             "fields": {
                 "What is it?": issue["title"],
-                "github link": issue["html_url"]
+                "github link": issue_url,
+                "Assignees": assignees,
+                "Comment": comment_text
             }
         })
+    else:
+        # 如果记录已经存在，则更新
+        record_id = existing_links[issue_url]
+        update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
+        update_data = {
+            "record": {
+                "fields": {
+                    "What is it?": issue["title"],
+                    "github link": issue_url,
+                    "Assignees": assignees,
+                    "Comment": comment_text
+                }
+            },
+            "fieldKeyType": "id"  # 使用 ID 作为字段键
+        }
+        
+        update_response = requests.put(update_url, headers=headers_teable, json=update_data)
+        
+        if update_response.status_code == 200:
+            print(f"✅ Issue {issue_url} 更新成功")
+            updated_records.append(issue_url)
+        else:
+            print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
 
 # 4️⃣ **同步到 Teable**
 if new_records:
@@ -69,5 +125,12 @@ if new_records:
         print(f"✅ {len(new_records)} 条新 Issue 成功同步到 Teable")
     else:
         print(f"❌ Teable API 插入失败: {response_insert.status_code}, {response_insert.text}")
+
+# 最后打印哪些 issue 被更新或者新增
+if not new_records and not updated_records:
+    print("⚠️ 没有新 Issue 需要同步，所有数据已存在。")
 else:
-    print("⚠️ 无新 Issue 需要同步，所有数据已存在。")
+    if new_records:
+        print(f"✅ {len(new_records)} 条新记录已同步到 Teable。")
+    if updated_records:
+        print(f"✅ {len(updated_records)} 条记录已更新。")
