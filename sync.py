@@ -9,9 +9,9 @@ REPO_NAME = "update"  # 仓库名称
 
 # 配置 Teable 访问信息
 TEABLE_TOKEN = "teable_acc3TYd8sn8wEYyyTNa_8p3MrgouOEhI82GBPjirUGyF+xPvSWoJKmTHcNTmu7o="  # Teable 访问令牌
-TABLE_ID = "tblsGQOJRAKhizNBYGN"  # 替换为你的 Teable 表 ID
+TABLE_ID = "tblsGQOJRAKhizNBYGN"  # Teable 表 ID
 
-# 1️⃣ 获取 GitHub Issues
+# 1️⃣ **获取 GitHub Issues**
 issues_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues?state=open"
 headers_github = {
     "Authorization": f"token {GH_TOKEN}",
@@ -20,32 +20,50 @@ headers_github = {
 response = requests.get(issues_url, headers=headers_github)
 
 if response.status_code != 200:
-    print(f"GitHub API 请求失败: {response.status_code}, {response.text}")
+    print(f"❌ GitHub API 请求失败: {response.status_code}, {response.text}")
     exit(1)
 
 issues = response.json()
 
-# 2️⃣ 构造 Teable API 需要的记录格式
-records = []
-for issue in issues:
-    records.append({
-        "fields": {
-            "What is it?": issue["title"],  # 标题
-            "github link": issue["html_url"]  # GitHub Issue 链接
-        }
-    })
-
-# 3️⃣ 调用 Teable API 创建记录
-teable_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+# 2️⃣ **查询 Teable，获取已存在的 github link**
+teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record?projection=github link"
 headers_teable = {
     "Authorization": f"Bearer {TEABLE_TOKEN}",
     "Content-Type": "application/json"
 }
-data = {"records": records}
+response_teable = requests.get(teable_query_url, headers=headers_teable)
 
-response_teable = requests.post(teable_url, headers=headers_teable, json=data)
+if response_teable.status_code != 200:
+    print(f"❌ Teable API 查询失败: {response_teable.status_code}, {response_teable.text}")
+    exit(1)
 
-if response_teable.status_code == 201:
-    print("✅ Issues 成功同步到 Teable")
+# 获取 Teable 已存在的 Issue 链接
+existing_links = set()
+teable_data = response_teable.json()
+for record in teable_data.get("records", []):
+    existing_links.add(record["fields"].get("github link"))
+
+# 3️⃣ **去重，筛选出 Teable 中没有的 Issues**
+new_records = []
+for issue in issues:
+    if issue["html_url"] not in existing_links:  # 只添加 Teable 没有的 Issue
+        new_records.append({
+            "fields": {
+                "What is it?": issue["title"],
+                "github link": issue["html_url"]
+            }
+        })
+
+# 4️⃣ **同步到 Teable**
+if new_records:
+    teable_insert_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+    data = {"records": new_records}
+    
+    response_insert = requests.post(teable_insert_url, headers=headers_teable, json=data)
+    
+    if response_insert.status_code == 201:
+        print(f"✅ {len(new_records)} 条新 Issue 成功同步到 Teable")
+    else:
+        print(f"❌ Teable API 插入失败: {response_insert.status_code}, {response_insert.text}")
 else:
-    print(f"❌ Teable API 请求失败: {response_teable.status_code}, {response_teable.text}")
+    print("⚠️ 无新 Issue 需要同步，所有数据已存在。")
