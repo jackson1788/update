@@ -81,8 +81,8 @@ for issue in issues:
                 "Issue ID": issue_id,
                 "What is it?": issue["title"],
                 "github link": issue_url,
-                "Assignees": Assignees,
-                "Comment": Comment
+                "Assignees": assignees,
+                "Comment": comment_test
             }
         })
     else:
@@ -94,8 +94,8 @@ for issue in issues:
                 "fields": {
                     "What is it?": issue["title"],
                     "github link": issue_url,
-                    "Assignees": Assignees,
-                    "Comment": Comment
+                    "Assignees": assignees,
+                    "Comment": comment_text
                 }
             },
             "fieldKeyType": "id"
