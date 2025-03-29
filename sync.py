@@ -82,7 +82,7 @@ for issue in issues:
                 "What is it?": issue["title"],
                 "github link": issue_url,
                 "Assignees": assignees,
-                "Comment": comment_test
+                "Comment": comment_text
             }
         })
     else:
