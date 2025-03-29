@@ -2,6 +2,16 @@ import requests
 import os
 import json
 
+
+GH_TOKEN = os.getenv("GH_TOKEN")
+
+if not GH_TOKEN:
+    raise ValueError("❌ GH_TOKEN 未找到，请检查 GitHub Secrets")
+
+headers_github = {
+    "Authorization": f"token {GH_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
 # 配置 GitHub 访问信息
 # GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub 个人访问令牌
 REPO_OWNER = "jackson1788"  # GitHub 用户名
