@@ -93,6 +93,7 @@ for issue in issues:
     else:
         # 需要更新的记录
         record_id = existing_records[issue_id]
+        print(f"Updating record: {record_id} for Issue ID: {issue_id}")
         update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
         update_data = {
             "record": {
