@@ -26,11 +26,11 @@ jobs:
         run: pip install psycopg2 requests python-dotenv
 
       # Step 4: Load environment variables from .env
-      - name: Load environment variables
-        run: cat .env >> $GITHUB_ENV
+      # - name: Load environment variables
+      #  run: cat .env >> $GITHUB_ENV
 
       # Step 5: Run sync script
       - name: Run sync script
         run: python sync.py
         env:
-          GH_TOKEN: ${{ env.GH_TOKEN }}
+          GH_TOKEN: ${{ GH_TOKEN }}
