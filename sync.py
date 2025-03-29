@@ -69,12 +69,14 @@ for issue in issues:
     assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])
     comments_url = issue["comments_url"]
 
-    # 获取 issue 的最新评论
+    # 获取最新评论
     response_comments = requests.get(comments_url, headers=headers_github)
     if response_comments.status_code == 200:
         comments = response_comments.json()
-        comment_text = " ".join([comment["body"] for comment in comments])  # 合并评论
-        print(f"评论内容: {comment_text}")  # 打印评论
+        if comments:
+            comment_text = comments[-1]["body"]  # 只取最新的一条评论
+        else:
+            comment_text = "无评论"
     else:
         print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
         comment_text = "无评论"
@@ -129,8 +131,18 @@ for issue in issues:
 if new_records:
     teable_insert_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
     data = {"records": new_records}
+
+    # 打印插入请求日志
+    print("==== 插入请求 ====")
+    print(f"URL: {teable_insert_url}")
+    print(f"请求头: {json.dumps(headers_teable, indent=2)}")
+    print(f"请求体: {json.dumps(data, indent=2)}")
+    print("=================")
     
     response_insert = requests.post(teable_insert_url, headers=headers_teable, json=data)
+    
+    print(f"响应状态码: {response_insert.status_code}")
+    print(f"响应内容: {response_insert.text}")
     
     if response_insert.status_code == 201:
         print(f"✅ {len(new_records)} 条新 Issue 成功同步到 Teable")
