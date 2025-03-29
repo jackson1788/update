@@ -33,7 +33,7 @@ issues = response.json()
 # 打印所有 issue 的 ID
 for issue in issues:
     print(f"Issue Title: {issue['title']}, Issue ID: {issue['id']}")
-    
+
 # 2️⃣ 查询 Teable，获取已存在的 Issue ID
 teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 query_params = {
@@ -69,15 +69,15 @@ for issue in issues:
     assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])
     comments_url = issue["comments_url"]
 
-# 获取 issue 的最新评论
-response_comments = requests.get(comments_url, headers=headers_github)
-if response_comments.status_code == 200:
-    comments = response_comments.json()
-    comment_text = " ".join([comment["body"] for comment in comments])  # 合并评论
-    print(f"评论内容: {comment_text}")  # 打印评论
-else:
-    print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
-    comment_text = "无评论"
+    # 获取 issue 的最新评论
+    response_comments = requests.get(comments_url, headers=headers_github)
+    if response_comments.status_code == 200:
+        comments = response_comments.json()
+        comment_text = " ".join([comment["body"] for comment in comments])  # 合并评论
+        print(f"评论内容: {comment_text}")  # 打印评论
+    else:
+        print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
+        comment_text = "无评论"
 
     if issue_id not in existing_records:
         # 新 issue 需要添加
