@@ -11,26 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up Python
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: pip install psycopg2 requests python-dotenv
 
-      # Step 4: Load environment variables from .env
-      # - name: Load environment variables
-      #  run: cat .env >> $GITHUB_ENV
-
-      # Step 5: Run sync script
       - name: Run sync script
         run: python sync.py
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TRIGGER_ISSUE_ID: ${{ github.event.issue.number }}  # 动态传递 Issue ID
