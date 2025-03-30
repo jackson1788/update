@@ -60,7 +60,7 @@ while True:
     records = teable_data.get("records", [])
     all_records.extend(records)
 
-    # 如果数据量小于请求的数量，则结束分页
+    # 如果返回的记录数小于请求的数量，说明没有更多数据了，退出循环
     if len(records) < query_params["take"]:
         break
 
