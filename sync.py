@@ -105,14 +105,9 @@ for issue in issues:
                     "Title": issue["title"],
                     "Link": issue_url,
                     "Assignees": assignees,
-                    "Comment": "000",  # 强制更新评论内容为 "000"
+                    "Comment": comment_text,
                     "Commenter": commenter
                 }
-            },
-            "order": {
-                "viewId": "string",  # 根据需求提供具体的 viewId
-                "anchorId": "string",  # 根据需求提供具体的 anchorId
-                "position": "before"  # 可以是 before 或者 other
             }
         }
 
@@ -129,7 +124,33 @@ for issue in issues:
         else:
             print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
 
-# 4️⃣ 同步新数据到 Teable
+# 4️⃣ 强制更新 "Comment" 为 "000" 的单独请求
+if existing_records:
+    for issue_id, record_id in existing_records.items():
+        update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
+        update_data = {
+            "fieldKeyType": "id",  # 这里改为 id
+            "typecast": True,
+            "record": {
+                "fields": {
+                    "Comment": "000"  # 强制更新为 "000"
+                }
+            }
+        }
+
+        print(f"❓ 强制更新请求: {json.dumps(update_data, indent=2)}")  # 打印强制更新请求的内容
+
+        update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+
+        # 打印更新响应
+        print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")  # 打印更新响应
+
+        if update_response.status_code == 200:
+            print(f"✅ Issue ID {issue_id} 更新成功")
+        else:
+            print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+
+# 5️⃣ 同步新数据到 Teable
 if new_records:
     teable_insert_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
     data = {"records": new_records}
