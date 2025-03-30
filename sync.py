@@ -91,26 +91,39 @@ update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 for issue_id, comment_data in latest_comments.items():
     if issue_id in all_records:
         record_id = all_records[issue_id]
-        update_data = {
-            "record": {
-                "fields": {
-                    "Comment": comment_data["comment"],
-                    "Commenter": comment_data["commenter"],
-                    "Assignees": ",".join(comment_data["assignees"])  # 更新 Assignees 字段
+        # 获取当前记录数据
+        current_record_url = f"{update_url}/{record_id}"
+        current_record_response = requests.get(current_record_url, headers=headers_teable)
+
+        if current_record_response.status_code == 200:
+            current_record = current_record_response.json()
+            current_comment = current_record["fields"].get("Comment", "")
+            current_assignees = current_record["fields"].get("Assignees", "")
+
+            # 只在评论或负责人有变化时进行更新
+            if comment_data["comment"] != current_comment or ",".join(comment_data["assignees"]) != current_assignees:
+                update_data = {
+                    "record": {
+                        "fields": {
+                            "Comment": comment_data["comment"],
+                            "Commenter": comment_data["commenter"],
+                            "Assignees": ",".join(comment_data["assignees"])  # 更新 Assignees 字段
+                        }
+                    },
+                    "fieldKeyType": "name",  # 必须使用 "name" 否则 404
+                    "typecast": True
                 }
-            },
-            "fieldKeyType": "name",  # 必须使用 "name" 否则 404
-            "typecast": True
-        }
 
-        update_response = requests.patch(f"{update_url}/{record_id}", headers=headers_teable, json=update_data)
+                update_response = requests.patch(f"{update_url}/{record_id}", headers=headers_teable, json=update_data)
 
-        print(f"📢 更新记录 {record_id} (Issue ID: {issue_id}) 响应: {update_response.status_code} - {update_response.text}")
+                print(f"📢 更新记录 {record_id} (Issue ID: {issue_id}) 响应: {update_response.status_code} - {update_response.text}")
 
-        if update_response.status_code == 200:
-            print(f"✅ 记录 {record_id} (Issue ID: {issue_id}) 更新成功")
-        else:
-            print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+                if update_response.status_code == 200:
+                    print(f"✅ 记录 {record_id} (Issue ID: {issue_id}) 更新成功")
+                else:
+                    print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+            else:
+                print(f"📢 记录 {record_id} (Issue ID: {issue_id}) 评论与负责人未变化，跳过更新。")
 
 # ❌ 强制更新部分（已注释，可手动启用）
 # for issue_id, record_id in all_records.items():
