@@ -68,30 +68,33 @@ while True:
         break  # 没有更多数据了，停止分页查询
     page += 1
 
-# 3️⃣ 强制更新所有记录的评论为 "111"
-update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+# 3️⃣ 仅更新 rec86OdkTsI4Pr9dAAx (Issue ID: 2958436443) 的 Comment 为 "222"
+target_record_id = "rec86OdkTsI4Pr9dAAx"
+target_issue_id = "2958436443"
 
-for issue_id, record_id in all_records.items():
+if target_issue_id in all_records:
+    update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{target_record_id}"
     update_data = {
         "record": {
             "fields": {
-                "Comment": "111"
+                "Comment": "222"
             }
         },
-        "fieldKeyType": "name",
+        "fieldKeyType": "id",
         "typecast": True
     }
 
-    # 发送更新请求
-    update_response = requests.patch(f"{update_url}/{record_id}", headers=headers_teable, json=update_data)
+    response = requests.patch(update_url, headers=headers_teable, json=update_data)
 
-    # 打印更新响应
-    print(f"📢 更新记录 {record_id} (Issue ID: {issue_id}) 响应: {update_response.status_code} - {update_response.text}")
+    # 打印更新结果
+    print(f"📢 更新记录 {target_record_id} (Issue ID: {target_issue_id}) 响应: {response.status_code} - {response.text}")
 
-    if update_response.status_code == 200:
-        print(f"✅ 记录 {record_id} (Issue ID: {issue_id}) 更新成功")
+    if response.status_code == 200:
+        print(f"✅ 记录 {target_record_id} (Issue ID: {target_issue_id}) 更新成功")
     else:
-        print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+        print(f"❌ Teable API 更新失败: {response.status_code}, {response.text}")
+else:
+    print(f"❌ 目标 Issue ID: {target_issue_id} 未在 Teable 中找到")
 
 # 输出同步结果
-print("✅ 完成强制更新所有记录的评论内容为 '111'。")
+print("✅ 完成特定记录的评论更新")
