@@ -65,26 +65,29 @@ update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 # 查询所有记录并强制更新
 for issue in issues:
     issue_id = str(issue["id"])  # GitHub Issue ID
-    update_data = {
-        "record": {
-            "fields": {
-                "Comment": "111"
-            }
-        },
-        "fieldKeyType": "id",
-        "typecast": True
-    }
+    if issue_id in existing_records:
+        update_data = {
+            "record": {
+                "fields": {
+                    "Comment": "111"
+                }
+            },
+            "fieldKeyType": "id",
+            "typecast": True
+        }
 
-    # 发送强制更新请求
-    update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+        # 发送强制更新请求
+        update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
 
-    # 打印更新响应
-    print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")
+        # 打印更新响应
+        print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")
 
-    if update_response.status_code == 200:
-        print(f"✅ Issue {issue_id} 更新成功")
+        if update_response.status_code == 200:
+            print(f"✅ Issue {issue_id} 更新成功")
+        else:
+            print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
     else:
-        print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+        print(f"❓ Issue ID {issue_id} 未在 Teable 中找到")
 
 # 输出同步结果
 print("✅ 完成强制更新所有记录的评论内容为 '111'。")
