@@ -78,7 +78,7 @@ for issue_id, record_id in all_records.items():
                 "Comment": "111"
             }
         },
-        "fieldKeyType": "id",
+        "fieldKeyType": "name",
         "typecast": True
     }
 
