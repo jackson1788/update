@@ -97,26 +97,31 @@ for issue in issues:
         # 需要更新的记录
         record_id = existing_records[issue_id]
         update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
-        update_data = {
-            "record": {
-                "fields": {
-                    "Title": issue["title"],
-                    "Link": issue_url,
-                    "Assignees": assignees,
-                    "Comment": comment_text,
-                    "Commenter": commenter
-                }
-            },
-            "fieldKeyType": "name",
-            "typecast": True
-        }
+        current_record = next(record for record in teable_data["records"] if record["id"] == record_id)
+        
+        fields_to_update = {}
 
-        update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
-        if update_response.status_code == 200:
-            print(f"✅ Issue {issue_url} 更新成功")
-            updated_records.append(issue_url)
-        else:
-            print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+        # 只更新评论和评论人字段，如果有变动
+        if current_record["fields"]["Comment"] != comment_text:
+            fields_to_update["Comment"] = comment_text
+        if current_record["fields"]["Commenter"] != commenter:
+            fields_to_update["Commenter"] = commenter
+
+        if fields_to_update:
+            update_data = {
+                "record": {
+                    "fields": fields_to_update
+                },
+                "fieldKeyType": "name",
+                "typecast": True
+            }
+
+            update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+            if update_response.status_code == 200:
+                print(f"✅ Issue {issue_url} 更新成功")
+                updated_records.append(issue_url)
+            else:
+                print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
 
 # 4️⃣ 同步新数据到 Teable
 if new_records:
