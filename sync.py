@@ -47,7 +47,8 @@ for issue in issues:
             last_comment = comments[-1]
             latest_comments[str(issue["id"])] = {
                 "comment": last_comment["body"],
-                "commenter": last_comment["user"]["login"]
+                "commenter": last_comment["user"]["login"],
+                "assignees": [assignee["login"] for assignee in issue.get("assignees", [])]
             }
 
 print("📢 获取最新评论成功:", latest_comments)
@@ -85,7 +86,7 @@ while True:
         break  # 没有更多数据了，停止分页查询
     page += 1
 
-# 4️⃣ 更新有新评论的 Issue 到 Teable
+# 4️⃣ 更新有新评论和 Assignees 的 Issue 到 Teable
 update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
 for issue_id, comment_data in latest_comments.items():
     if issue_id in all_records:
@@ -94,7 +95,8 @@ for issue_id, comment_data in latest_comments.items():
             "record": {
                 "fields": {
                     "Comment": comment_data["comment"],
-                    "Commenter": comment_data["commenter"]
+                    "Commenter": comment_data["commenter"],
+                    "Assignees": ",".join(comment_data["assignees"])  # 更新 Assignees 字段
                 }
             },
             "fieldKeyType": "name",  # 必须使用 "name" 否则 404
@@ -124,4 +126,4 @@ for issue_id, comment_data in latest_comments.items():
 #     update_response = requests.patch(f"{update_url}/{record_id}", headers=headers_teable, json=update_data)
 #     print(f"📢 强制更新 {record_id} (Issue ID: {issue_id}) 响应: {update_response.status_code} - {update_response.text}")
 
-print("✅ 完成同步最新的评论到 Teable。")
+print("✅ 完成同步最新的评论和 Assignees 到 Teable。")
