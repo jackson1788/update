@@ -69,20 +69,17 @@ for issue in issues:
     assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])
     comments_url = issue["comments_url"]
 
-    # 强制更新 Issue ID 为 2958436443 的评论
-    if issue_id == "2958436443":
-        comment_text = "000"
-        commenter = "jackson1788"
+    # 获取 issue 的最新评论
+    response_comments = requests.get(comments_url, headers=headers_github)
+    if response_comments.status_code == 200:
+        comments = response_comments.json()
+        comment_text = comments[-1]["body"] if comments else "无评论"
+        commenter = comments[-1]["user"]["login"] if comments else "无评论人"
+        print(f"评论内容: {comment_text}, 评论人: {commenter}")  # 打印评论
     else:
-        # 获取 issue 的最新评论
-        response_comments = requests.get(comments_url, headers=headers_github)
-        if response_comments.status_code == 200:
-            comments = response_comments.json()
-            comment_text = comments[-1]["body"] if comments else "无评论"
-            commenter = comments[-1]["user"]["login"] if comments else "无评论人"
-        else:
-            comment_text = "无评论"
-            commenter = "无评论人"
+        print(f"❌ 获取评论失败: {response_comments.status_code}, {response_comments.text}")
+        comment_text = "无评论"
+        commenter = "无评论人"
 
     if issue_id not in existing_records:
         # 新 issue 需要添加
@@ -106,7 +103,7 @@ for issue in issues:
                     "Title": issue["title"],
                     "Link": issue_url,
                     "Assignees": assignees,
-                    "Comment": comment_text,
+                    "Comment": "000",  # 强制更新评论内容为 "000"
                     "Commenter": commenter
                 }
             },
@@ -114,8 +111,14 @@ for issue in issues:
             "typecast": True
         }
 
+        print(f"❓ 发送更新请求: {json.dumps(update_data, indent=2)}")  # 打印更新请求的内容
+
         update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+        
+        print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")  # 打印更新响应
+
         if update_response.status_code == 200:
+            print(f"✅ Issue {issue_url} 更新成功")
             updated_records.append(issue_url)
         else:
             print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
