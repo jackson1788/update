@@ -69,15 +69,20 @@ for issue in issues:
     assignees = ", ".join([assignee["login"] for assignee in issue["assignees"]])
     comments_url = issue["comments_url"]
 
-    # 获取 issue 的最新评论
-    response_comments = requests.get(comments_url, headers=headers_github)
-    if response_comments.status_code == 200:
-        comments = response_comments.json()
-        comment_text = comments[-1]["body"] if comments else "无评论"
-        commenter = comments[-1]["user"]["login"] if comments else "无评论人"
+    # 强制更新 Issue ID 为 2958436443 的评论
+    if issue_id == "2958436443":
+        comment_text = "000"
+        commenter = "jackson1788"
     else:
-        comment_text = "无评论"
-        commenter = "无评论人"
+        # 获取 issue 的最新评论
+        response_comments = requests.get(comments_url, headers=headers_github)
+        if response_comments.status_code == 200:
+            comments = response_comments.json()
+            comment_text = comments[-1]["body"] if comments else "无评论"
+            commenter = comments[-1]["user"]["login"] if comments else "无评论人"
+        else:
+            comment_text = "无评论"
+            commenter = "无评论人"
 
     if issue_id not in existing_records:
         # 新 issue 需要添加
