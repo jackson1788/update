@@ -59,7 +59,41 @@ for record in teable_data.get("records", []):
     if issue_id:
         existing_records[issue_id] = record["id"]
 
-# 3️⃣ 处理新数据和更新数据
+# 3️⃣ 强制更新评论内容为 000
+issue_id_to_update = "2958436443"  # 用你实际需要更新的 Issue ID
+new_comment = "000"
+
+# 获取 record_id，这个值在查询时已获得
+record_id = existing_records.get(issue_id_to_update)
+
+if record_id:
+    # 构建更新数据
+    update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
+    update_data = {
+        "record": {
+            "fields": {
+                "Comment": new_comment  # 强制更新评论内容为 "000"
+            }
+        },
+        "fieldKeyType": "name",
+        "typecast": True
+    }
+
+    print(f"❓ 发送更新请求: {json.dumps(update_data, indent=2)}")  # 打印更新请求的内容
+
+    update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
+
+    # 打印更新响应
+    print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")  # 打印更新响应
+
+    if update_response.status_code == 200:
+        print(f"✅ Issue {issue_id_to_update} 更新成功")
+    else:
+        print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+else:
+    print(f"❌ 找不到 Issue ID {issue_id_to_update} 对应的记录，无法更新")
+
+# 4️⃣ 同步新数据到 Teable
 new_records = []
 updated_records = []
 
@@ -103,7 +137,7 @@ for issue in issues:
                     "Title": issue["title"],
                     "Link": issue_url,
                     "Assignees": assignees,
-                    "Comment": "000",  # 强制更新评论内容为 "000"
+                    "Comment": comment_text,
                     "Commenter": commenter
                 }
             },
@@ -111,30 +145,12 @@ for issue in issues:
             "typecast": True
         }
 
-        print(f"❓ 发送更新请求: {json.dumps(update_data, indent=2)}")  # 打印更新请求的内容
-
         update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
-        
-        # 打印更新响应
-        print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")  # 打印更新响应
-
         if update_response.status_code == 200:
             print(f"✅ Issue {issue_url} 更新成功")
             updated_records.append(issue_url)
         else:
             print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
-
-# 4️⃣ 同步新数据到 Teable
-if new_records:
-    teable_insert_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
-    data = {"records": new_records}
-    
-    response_insert = requests.post(teable_insert_url, headers=headers_teable, json=data)
-    
-    if response_insert.status_code == 201:
-        print(f"✅ {len(new_records)} 条新 Issue 成功同步到 Teable")
-    else:
-        print(f"❌ Teable API 插入失败: {response_insert.status_code}, {response_insert.text}")
 
 # 输出同步结果
 if not new_records and not updated_records:
