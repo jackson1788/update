@@ -80,7 +80,7 @@ if target_issue_id in all_records:
                 "Comment": "222"
             }
         },
-        "fieldKeyType": "id",
+        "fieldKeyType": "name",
         "typecast": True
     }
 
