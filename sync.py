@@ -115,6 +115,7 @@ for issue in issues:
 
         update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
         
+        # 打印更新响应
         print(f"📢 更新响应: {update_response.status_code} - {update_response.text}")  # 打印更新响应
 
         if update_response.status_code == 200:
