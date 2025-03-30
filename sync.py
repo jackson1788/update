@@ -129,7 +129,7 @@ if existing_records:
     for issue_id, record_id in existing_records.items():
         update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
         update_data = {
-            "fieldKeyType": "id",  # 这里改为 id
+            "fieldKeyType": "name",  # 这里改为 id
             "typecast": True,
             "record": {
                 "fields": {
