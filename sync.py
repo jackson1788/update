@@ -1,5 +1,6 @@
 import requests
 import os
+import json
 
 # 获取 GitHub Token
 GH_TOKEN = os.getenv("GH_TOKEN")
@@ -38,17 +39,17 @@ issues = response.json()
 for issue in issues:
     print(f"Issue Title: {issue['title']}, Issue ID: {issue['id']}")
 
-# 2️⃣ 查询 Teable，获取所有已存在的 Issue ID 和 Record ID
-teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
-query_params = {
-    "fieldKeyType": "name",
-    "take": 100,
-    "page": 1
-}
-
+# 2️⃣ 分页查询 Teable，获取所有记录
 existing_records = {}
-
+page = 1
 while True:
+    teable_query_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
+    query_params = {
+        "fieldKeyType": "name",
+        "take": 100,
+        "skip": (page - 1) * 100
+    }
+    
     response_teable = requests.get(teable_query_url, headers=headers_teable, params=query_params)
     if response_teable.status_code != 200:
         print(f"❌ Teable API 查询失败: {response_teable.status_code}, {response_teable.text}")
@@ -56,8 +57,7 @@ while True:
 
     teable_data = response_teable.json()
     records = teable_data.get("records", [])
-
-    print(f"📢 获取的 Teable 数据（页面 {query_params['page']}）：{len(records)} 条")
+    print(f"📢 获取的 Teable 数据（页面 {page}）：{len(records)} 条")
 
     for record in records:
         issue_id = record["fields"].get("Issue ID")
@@ -65,10 +65,9 @@ while True:
         if issue_id:
             existing_records[issue_id] = record_id
 
-    if len(records) < query_params["take"]:
+    if len(records) < 100:  # 已获取所有数据
         break
-
-    query_params["page"] += 1  # 获取下一页
+    page += 1
 
 # 3️⃣ 强制更新所有评论为 "111"
 update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record"
