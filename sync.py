@@ -92,26 +92,23 @@ while True:
 # 3️⃣ 更新触发 Issue 的评论与负责人到 Teable
 if trigger_issue_id in all_records:
     record_id = all_records[trigger_issue_id]
+    print(f"📢 触发的 Issue ID: {trigger_issue_id}, 对应的 Teable 记录 ID: {record_id}")
+
+    update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
     update_data = {
         "record": {
             "fields": {
                 "Comment": latest_comment,
-                "Commenter": commenter,
-                "Assignees": commenter  # 可以根据需要添加其他字段，比如负责人
+                "Commenter": latest_commenter
             }
         },
-        "fieldKeyType": "name",  # 必须使用 "name" 否则 404
+        "fieldKeyType": "name",
         "typecast": True
     }
 
-    update_url = f"https://app.teable.io/api/table/{TABLE_ID}/record/{record_id}"
     update_response = requests.patch(update_url, headers=headers_teable, json=update_data)
-
-    print(f"📢 更新记录 {record_id} (Issue ID: {trigger_issue_id}) 响应: {update_response.status_code} - {update_response.text}")
-
-    if update_response.status_code == 200:
-        print(f"✅ 记录 {record_id} (Issue ID: {trigger_issue_id}) 更新成功")
-    else:
-        print(f"❌ Teable API 更新失败: {update_response.status_code}, {update_response.text}")
+    print(f"📢 更新记录 {record_id} 响应: {update_response.status_code} - {update_response.text}")
+else:
+    print(f"❌ 未找到 Issue ID {trigger_issue_id} 对应的 Teable 记录，无法更新。")
 
 print("✅ 完成同步触发 Issue 的评论和负责人到 Teable。")
