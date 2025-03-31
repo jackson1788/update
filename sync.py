@@ -25,6 +25,7 @@ trigger_issue_id = os.getenv("TRIGGER_ISSUE_ID")  # 通过环境变量获取 Iss
 
 if not trigger_issue_id:
     raise ValueError("❌ TRIGGER_ISSUE_ID 未找到，请检查工作流配置")
+print(f"📢 触发的 Issue ID: {trigger_issue_id}")
 
 # 1️⃣ 获取 GitHub Issue 详细信息
 issue_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues/{trigger_issue_id}"
